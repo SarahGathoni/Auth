@@ -3,18 +3,19 @@ const UserDB = require('../models/users');
 const bcrypt = require('bcrypt');
 
 router.post('/register', async(req, res) =>{
-    const {username, password, confirmpassword, email} = req.body
+    const {user, email, pwd, matchPwd} = req.body
 
-    if(!username || !password || !confirmpassword || !email){
+    if(!user || !email || !pwd || !matchPwd){
         res.status(400).json('all fields are required')
     }
     try {
-        const hashedPassword = await bcrypt.hash(password, 10)
+        const hashedPassword = await bcrypt.hash(pwd, 10)
         const newUser = new UserDB({
-            username: username,
-            password: hashedPassword,
-            confirmpassword: hashedPassword,
-            email: email
+            user: user,
+            email: email,
+            pwd: hashedPassword,
+            matchPwd: hashedPassword
+            
         })
         await newUser.save();
         res.status(200).json({ message: 'User registered successfully' });

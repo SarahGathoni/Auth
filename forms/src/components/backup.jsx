@@ -10,25 +10,25 @@ const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 //Password Regex (Requires at least 8 characters, at least one uppercase letter, one lowercase letter, one number, and one special character)
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-//email REGEX
-const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-
-
 
 export default function Signup() {
     
-    const [sucessSubmit, setSuccessSubmit] = useState(false);
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
+        confirmpassword: ''
+    });
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+    };
 
     const postDataToServer = async () => {
-        
         try {
-           /* const { username, email, password, confirmpassword } = formData;*/
             // Send POST request to the server using Axios
-            const response = await axios.post('http://localhost:3500/register', JSON.stringify({user, email, pwd, matchPwd}),{
-                headers: {
-                    'Content-Type': 'application/json',},
-            
-                });
+            const response = await axios.post('http://localhost:3500/register', formData);
 
             // Handle the response, show a success message
             console.log('Data sent to server:', response.data);
@@ -43,16 +43,6 @@ export default function Signup() {
         postDataToServer();
     };
 
-    const checkSubmit = async (e) => {
-        e.preventDefault(); // Prevent the form from submitting
-        try {
-            await handleSubmit(e);
-            console.log('Data sent successfully');
-        } catch (error) {
-            console.error('Error sending data:', error);
-        }
-    };
-
     const userRef = useRef();
    const errRef = useRef();
 
@@ -61,9 +51,6 @@ export default function Signup() {
    const [userFocus, setUserFocus] = useState(false)
 
    //EMAIL
-   const [email, setEmail] = useState('')
-   const [validEmail, setValidEmail] = useState(false)
-   const [emailFocus, setEmailFocus] = useState(false)
 
    const [pwd, setPwd] = useState('')
    const [validPwd, setValidPwd] = useState(false)
@@ -88,13 +75,6 @@ export default function Signup() {
     
    }, [user])
 
-   //VALIDATE EMAIL
-   useEffect(() =>{
-    setValidEmail(EMAIL_REGEX.test(email))
-    console.log(email)
-   }, [email])
-   
-
    //VALIDATE PWD
    useEffect(()=>{
     const result = PWD_REGEX.test(pwd)
@@ -109,7 +89,7 @@ export default function Signup() {
    //UPDATING ERR MSG
    useEffect(()=>{
     setErrMsg('')
-   }, [user, pwd, matchPwd])
+   }, user, pwd, matchPwd)
 
     return (
         <>
@@ -119,12 +99,16 @@ export default function Signup() {
                 <p className="message">Signup now and get full access to our app. </p>
                 <div className="flex">
                     <label htmlFor = "username">
-                    <span>Username</span>
+                    Username
                     <span>
-                    {validName ? (<div> <FontAwesomeIcon icon={faCheck} className='text-green-500'/> </div>):null
-                    
-                    }
-                    
+                    <FontAwesomeIcon icon={faCheck} className={validName ? "valid" : "hide"} />
+                    <FontAwesomeIcon icon={faTimes} className={validName || !user ? "hide" : "invalid"} />
+                        {userFocus && user && !validName && (
+                            <FontAwesomeIcon
+                            icon={faCheck}
+                            className='text-green-500'
+                        />
+                        )}
                         </span>
                     
 
@@ -135,9 +119,9 @@ export default function Signup() {
                             placeholder=""
                             type="text"
                             name='username'
-                            onChange={(e) => setUser (e.target.value)}
-                            value={user}
-                            className='input'
+                            value={formData.username}
+                            onChange={handleInputChange}
+                            className={`input ${validName ? 'border-green-500' : 'border-red-500'}`}
                             ref={userRef}
                             aria-invalid={validName ? 'false' : 'true'}
                             aria-describedby='uidnote'
@@ -145,15 +129,12 @@ export default function Signup() {
                             onBlur={() => setUserFocus(false)}
                             
                         />
-                        {userFocus && user && !validName ?(
-                            <p id="uidnote" className= "instructions">
+                        <p id="uidnote" className={userFocus && user && !validName ? "instructions" : "offscreen"}>
                             <FontAwesomeIcon icon={faInfoCircle} />
                             4 to 24 characters.<br />
                             Must begin with a letter.<br />
                             Letters, numbers, underscores, hyphens allowed.
                         </p>
-                        ) : null}
-                        
                     
                     </label>  
                     
@@ -161,83 +142,78 @@ export default function Signup() {
                 </div>
 
                 <label>
-                <span>Email</span>
-                    {validEmail ? (<div> <FontAwesomeIcon icon={faCheck} className='text-green-500'/> </div>):null}
                     <input
-                        id = "email"
                         required=""
                         placeholder=""
                         type="email"
                         name='email'
-                        onChange={(e) => setEmail (e.target.value)}
-                        value={email}
+                        value={formData.email}
+                        onChange={handleInputChange}
                         className="input"
                     />
+                    <span>Email</span>
                     
+                    
+
                 </label>
 
                 <label>
                     
                 <span>Password</span>
-                {validPwd ? (<div><FontAwesomeIcon icon={faCheck} className='text-green-500'/></div>):
-                null
-                }
-                
+                {!validPwd && pwdFocus? (<p className='visible text-red-500'>
+                        atleast 8  characters<br />
+                        1 uppercase letter, 1 number, 1 special character
+                    </p>): <FontAwesomeIcon icon={faCheck} className="text-green-500"/>
+                    
+                    }
                     <input
-                        id='password'
                         required=""
                         placeholder=""
                         type="password"
                         name='password'
-                        onChange={(e) => setPwd ( e.target.value)}
-                        value={pwd}
+                        value={formData.password}
+                        onChange={handleInputChange}
                         className="input"
                         onFocus={() =>setPwdFocus(true)}
                         onBlur={() => setPwdFocus(false)}
                         aria-invalid={validPwd ? 'false' : 'true'}
                     />
-                    {pwdFocus && pwd && !validPwd ?(
-                            <p id="uidnote" className= "instructions">
-                            <FontAwesomeIcon icon={faInfoCircle} />
-                            4 to 24 characters.<br />
-                            Must begin with a letter.<br />
-                            Letters, numbers, underscores, hyphens allowed.
-                        </p>
-                        ) : null}
+                    
+                    <span>
+                    
+                    
+                    </span>
+                
                 </label>
 
                 <label>
                 <span>Confirm password</span>
-                
                 <FontAwesomeIcon icon={faCheck} className={validMatch && matchPwd ? "valid" : "hide"} />
-                
-                
                            
-                 
+                 <FontAwesomeIcon icon={faTimes} className={validMatch || !matchPwd ? "hide" : "invalid"} />
                     <input
                         required=""
                         id="confirm_pwd"
                         placeholder=""
                         type="password"
                         name='confirmpassword'
-                        onChange={(e) => setMatchPwd (e.target.value)}
-                        value={matchPwd}
+                        value={formData.confirmpassword}
+                        onChange={handleInputChange}
                         className="input"
                         
                     />
+                    
                     <p id="confirmnote" className={matchFocus && !validMatch ? "instructions" : "offscreen"}>
                             <FontAwesomeIcon icon={faInfoCircle} />
                             Must match the first password input field.
                         </p>
                 </label>
-                {validName || validPwd || validMatch ||validEmail ? (<button className="submit text-center" onClick={checkSubmit}>Sign Up</button>
-                ): <button disabled  >Sign Up</button>
-            }
-                
+
+                <button className="submit text-center">Submit</button>
                 <p className="signin">
                     Already have an account? <a href="#"/>Signin
                 </p>
             </form>
         </>
-    )
+    );
 }
