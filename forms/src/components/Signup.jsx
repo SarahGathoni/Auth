@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { faTimes, faCheck, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useContext } from 'react';
+import {ThemeContext} from './ThemeContextApi'
+
+
+
 
 import axios from 'axios';
 
@@ -16,22 +21,40 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
 
 
 export default function Signup() {
-    
     const [sucessSubmit, setSuccessSubmit] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    
+        const theme = useContext(ThemeContext);
+        const night = theme.state.nightMode;
+      
+    
+    
 
     const postDataToServer = async () => {
         
         try {
            /* const { username, email, password, confirmpassword } = formData;*/
             // Send POST request to the server using Axios
-            const response = await axios.post('http://localhost:3500/register', JSON.stringify({user, email, pwd, matchPwd}),{
+            const response = await axios.post('http://localhost:3500/register', {user, email, pwd, matchPwd},{
                 headers: {
                     'Content-Type': 'application/json',},
             
                 });
 
             // Handle the response, show a success message
-            console.log('Data sent to server:', response.data);
+            console.log('Data sent successfully:', response.data);
+
+            if (response.data.message) {
+                setSuccessMessage(response.data.message);
+
+                //hide success message after 10sec
+               const timeoutId = setTimeout(() =>{
+                    setSuccessMessage('')
+                },3000);
+
+                // clear timeout on component unmount
+        return () => clearTimeout(timeoutId);
+              }
         } catch (error) {
             // Handle errors, show an error message
             console.error('Error sending data:', error);
@@ -47,7 +70,9 @@ export default function Signup() {
         e.preventDefault(); // Prevent the form from submitting
         try {
             await handleSubmit(e);
-            console.log('Data sent successfully');
+            console.log('Data sent successfully' );
+
+            
         } catch (error) {
             console.error('Error sending data:', error);
         }
@@ -113,8 +138,9 @@ export default function Signup() {
 
     return (
         <>
+        <div  >
             <p ref={errRef} className={errMsg ? 'errmsg' : "offscreen"} aria-live='assertive'>{errMsg} </p>
-            <form className="form mx-auto" onSubmit={handleSubmit}>
+            <form className={`form mx-auto ${night ? "bg-black text-white" : "bg-white text-black"}`}  onSubmit={handleSubmit}>
                 <p className="title">Sign Up </p>
                 <p className="message">Signup now and get full access to our app. </p>
                 <div className="flex">
@@ -232,12 +258,16 @@ export default function Signup() {
                 </label>
                 {validName || validPwd || validMatch ||validEmail ? (<button className="submit text-center" onClick={checkSubmit}>Sign Up</button>
                 ): <button disabled  >Sign Up</button>
-            }
+
+                
+                }
+                {successMessage && <p className="text-center" >sent successfully</p>}
                 
                 <p className="signin">
                     Already have an account? <a href="#"/>Signin
                 </p>
             </form>
+            </div>
         </>
     )
 }

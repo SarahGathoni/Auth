@@ -4,16 +4,17 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 
 const app = express();
+
+app.use(cors({
+  origin: 'http://localhost:5173',
+}));
 dotenv.config();
 
-/*const corsOptions = {
-  origin: 'http://localhost:5173', 
-  credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-};*/
 
 
 
-app.use(cors);
+
+
 
 const PORT = 3500;
   //CONNECT TO THE DB HERE
